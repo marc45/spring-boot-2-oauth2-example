@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.authentication.CachingUserDetailsService;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
@@ -16,6 +18,7 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 import org.springframework.security.oauth2.provider.approval.UserApprovalHandler;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
 
 @Configuration
@@ -24,7 +27,6 @@ public class AuthorizationServerConfigure extends AuthorizationServerConfigurerA
 
     @Autowired
     PasswordEncoder passwordEncoder;
-
 
     @Autowired
     private TokenStore tokenStore;
@@ -38,6 +40,9 @@ public class AuthorizationServerConfigure extends AuthorizationServerConfigurerA
 
     @Value("${tonr.redirect:http://localhost:8080/tonr2/sparklr/redirect}")
     private String tonrRedirectUri;
+
+    @Autowired
+    private UserDetailsService userDetailsService;
 
 
     @Override
@@ -75,7 +80,7 @@ public class AuthorizationServerConfigure extends AuthorizationServerConfigurerA
                     .accessTokenValiditySeconds(60)
                 .and()
                 .withClient("my-trusted-client-with-secret")
-                    .authorizedGrantTypes("password", "authorization_code", "refresh_token", "implicit", "client_credentials", "refresh_token")
+                    .authorizedGrantTypes("password", "authorization_code",  "implicit", "client_credentials", "refresh_token")
                     .authorities("ROLE_CLIENT", "ROLE_TRUSTED_CLIENT")
                     .scopes("read", "write", "trust")
                     .secret(passwordEncoder.encode("somesecret"))
@@ -99,13 +104,18 @@ public class AuthorizationServerConfigure extends AuthorizationServerConfigurerA
 
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
-        endpoints.tokenStore(tokenStore).userApprovalHandler(userApprovalHandler)
-                .authenticationManager(authenticationManager);
+        endpoints
+                .tokenStore(tokenStore)
+                .userApprovalHandler(userApprovalHandler)
+                .authenticationManager(authenticationManager)
+                .userDetailsService(userDetailsService);
     }
 
     @Override
     public void configure(AuthorizationServerSecurityConfigurer oauthServer) throws Exception {
-        oauthServer.realm("sparklr2/client");
+        oauthServer
+                .realm("sparklr2/client")
+                .checkTokenAccess("isAuthenticated()");
     }
 
 }
