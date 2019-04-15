@@ -2,19 +2,14 @@ package com.example.oauthexample.configure;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.authentication.configurers.provisioning.UserDetailsManagerConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @EnableWebSecurity
@@ -38,23 +33,28 @@ public class SecurityConfigure extends WebSecurityConfigurerAdapter {
     }
 
     @Override
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring().antMatchers("/webjars/**", "/images/**", "/oauth/uncache_approvals", "/oauth/cache_approvals", "/go", "/templates/login.html", "/templates/index.html", "/errors");
+    }
+
+    @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
-                .antMatchers("/login.jsp").permitAll()
+                .antMatchers("/login").permitAll()
                 .anyRequest().hasRole("USER")
-                .and().exceptionHandling().accessDeniedPage("/login.jsp?authorization_error=true")
                 .and()
-                // TODO: put CSRF protection back into this endpoint
-                .csrf()
-                .requireCsrfProtectionMatcher(new AntPathRequestMatcher("/oauth/authorize"))
-                .disable()
-                .logout()
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login.jsp")
+                    .exceptionHandling().accessDeniedPage("/login")
                 .and()
-                .formLogin()
-                .loginProcessingUrl("/login")
-                .failureUrl("/login.jsp?authentication_error=true")
-                .loginPage("/login.jsp");
+                    .csrf()
+                    .requireCsrfProtectionMatcher(new AntPathRequestMatcher("/oauth/authorize"))
+                    .disable()
+                    .logout()
+                    .logoutUrl("/logout")
+                    .logoutSuccessUrl("/login")
+                .and()
+                    .formLogin()
+                    .loginProcessingUrl("/login")
+                    .failureUrl("/login")
+                    .loginPage("/login");
     }
 }

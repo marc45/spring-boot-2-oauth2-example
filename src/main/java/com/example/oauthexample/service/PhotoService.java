@@ -17,6 +17,27 @@ import java.util.List;
 public class PhotoService {
     private List<PhotoInfo> photos;
 
+    public PhotoService(){
+        List<PhotoInfo> photos = new ArrayList<PhotoInfo>();
+        photos.add(createPhoto("1", "marissa"));
+        photos.add(createPhoto("2", "paul"));
+        photos.add(createPhoto("3", "marissa"));
+        photos.add(createPhoto("4", "paul"));
+        photos.add(createPhoto("5", "marissa"));
+        photos.add(createPhoto("6", "paul"));
+        this.photos = photos;
+
+    }
+
+    private PhotoInfo createPhoto(String id, String userId) {
+        PhotoInfo photo = new PhotoInfo();
+        photo.setId(id);
+        photo.setName("photo" + id + ".jpg");
+        photo.setUserId(userId);
+        photo.setResourceURL("/static/photos/" + photo.getName());
+        return photo;
+    }
+
     public Collection<PhotoInfo> getPhotosForCurrentUser(String username) {
 
         ArrayList<PhotoInfo> infos = new ArrayList<PhotoInfo>();
